@@ -11,13 +11,10 @@ class ConductorController {
         exit;
     }
 
-    
     // ========================
     // 📄 LISTAR
     // ========================
     public function listar() {
-        ini_set('display_errors', 0);
-
         try {
             $db = new Database();
             $conn = $db->connect();
@@ -36,7 +33,6 @@ class ConductorController {
             ");
 
             $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
             $this->json($data);
 
         } catch (Exception $e) {
@@ -52,11 +48,8 @@ class ConductorController {
             $db = new Database();
             $conn = $db->connect();
 
-            $stmt = $conn->prepare("
-                SELECT * FROM conductores WHERE id = ?
-            ");
+            $stmt = $conn->prepare("SELECT * FROM conductores WHERE id = ?");
             $stmt->execute([$id]);
-
             $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if (!$data) {
@@ -74,8 +67,6 @@ class ConductorController {
     // ➕ CREAR
     // ========================
     public function crear() {
-        ini_set('display_errors', 0);
-
         try {
             $input = file_get_contents("php://input");
             $data = json_decode($input, true);
@@ -84,18 +75,20 @@ class ConductorController {
                 $this->json(["error" => "JSON inválido"], 400);
             }
 
-            if (
-                empty($data['nombre']) ||
-                empty($data['cedula']) ||
-                empty($data['email']) ||
-                empty($data['password']) ||
-                empty($data['contratista_id'])
-            ) {
+            if (empty($data['nombre']) || empty($data['cedula']) || empty($data['email']) || 
+                empty($data['password']) || empty($data['contratista_id'])) {
                 $this->json(["error" => "Datos incompletos"], 400);
             }
 
             $db = new Database();
             $conn = $db->connect();
+
+            // Verificar si ya existe la cédula
+            $checkStmt = $conn->prepare("SELECT id FROM conductores WHERE cedula = ?");
+            $checkStmt->execute([trim($data['cedula'])]);
+            if ($checkStmt->fetch()) {
+                $this->json(["error" => "Ya existe un conductor con esta cédula"], 400);
+            }
 
             $stmt = $conn->prepare("
                 INSERT INTO conductores 
@@ -111,9 +104,7 @@ class ConductorController {
                 $data['contratista_id']
             ]);
 
-            $this->json([
-                "mensaje" => "Conductor creado correctamente"
-            ]);
+            $this->json(["mensaje" => "Conductor creado correctamente", "id" => $conn->lastInsertId()]);
 
         } catch (Exception $e) {
             $this->json(["error" => $e->getMessage()], 500);
@@ -123,32 +114,39 @@ class ConductorController {
     // ========================
     // ✏️ ACTUALIZAR
     // ========================
-    public function actualizar($id) {
+    public function actualizar() {
         try {
             $data = json_decode(file_get_contents("php://input"), true);
 
-            if (!is_array($data)) {
-                $this->json(["error" => "JSON inválido"], 400);
+            if (!is_array($data) || empty($data['id'])) {
+                $this->json(["error" => "ID no proporcionado o datos inválidos"], 400);
             }
 
             $db = new Database();
             $conn = $db->connect();
 
+            // Verificar si el conductor existe
+            $checkStmt = $conn->prepare("SELECT id FROM conductores WHERE id = ?");
+            $checkStmt->execute([$data['id']]);
+            if (!$checkStmt->fetch()) {
+                $this->json(["error" => "Conductor no encontrado"], 404);
+            }
+
             $stmt = $conn->prepare("
                 UPDATE conductores 
-                SET nombre=?, cedula=?, email=?, contratista_id=?
-                WHERE id=?
+                SET nombre = ?, cedula = ?, email = ?, contratista_id = ?
+                WHERE id = ?
             ");
 
             $stmt->execute([
                 $data['nombre'],
                 $data['cedula'],
-                $data['email'],
-                $data['contratista_id'],
-                $id
+                $data['email'] ?? null,
+                $data['contratista_id'] ?? null,
+                $data['id']
             ]);
 
-            $this->json(["mensaje" => "Conductor actualizado"]);
+            $this->json(["mensaje" => "Conductor actualizado correctamente"]);
 
         } catch (Exception $e) {
             $this->json(["error" => $e->getMessage()], 500);
@@ -158,23 +156,41 @@ class ConductorController {
     // ========================
     // ❌ ELIMINAR
     // ========================
-    public function eliminar($id) {
-        try {
-            $db = new Database();
-            $conn = $db->connect();
+  
+public function eliminar($id) {
+    try {
+        $db = new Database();
+        $conn = $db->connect();
 
-            $stmt = $conn->prepare("DELETE FROM conductores WHERE id=?");
-            $stmt->execute([$id]);
-
-            $this->json(["mensaje" => "Conductor eliminado"]);
-
-        } catch (Exception $e) {
-            $this->json(["error" => $e->getMessage()], 500);
+        // Verificar si el conductor existe
+        $checkStmt = $conn->prepare("SELECT id FROM conductores WHERE id = ?");
+        $checkStmt->execute([$id]);
+        
+        if (!$checkStmt->fetch()) {
+            $this->json(["error" => "Conductor no encontrado"], 404);
         }
+
+        // Verificar si tiene vehículos asociados
+        $vehiculosStmt = $conn->prepare("SELECT COUNT(*) FROM vehiculos WHERE conductor_id = ?");
+        $vehiculosStmt->execute([$id]);
+        $cantidadVehiculos = $vehiculosStmt->fetchColumn();
+        
+        if ($cantidadVehiculos > 0) {
+            $this->json(["error" => "No se puede eliminar porque tiene $cantidadVehiculos vehículo(s) asociado(s)"], 400);
+        }
+
+        $stmt = $conn->prepare("DELETE FROM conductores WHERE id = ?");
+        $stmt->execute([$id]);
+
+        $this->json(["mensaje" => "Conductor eliminado correctamente"]);
+
+    } catch (Exception $e) {
+        $this->json(["error" => $e->getMessage()], 500);
     }
+}
 
     // ========================
-    // 🔍 POR CONTRATISTA (CLAVE PARA VEHÍCULOS)
+    // 🔍 POR CONTRATISTA
     // ========================
     public function porContratista($contratista_id) {
         try {
@@ -182,9 +198,10 @@ class ConductorController {
             $conn = $db->connect();
 
             $stmt = $conn->prepare("
-                SELECT id, nombre 
+                SELECT id, nombre, cedula 
                 FROM conductores 
                 WHERE contratista_id = ?
+                ORDER BY nombre
             ");
             $stmt->execute([$contratista_id]);
 
@@ -193,10 +210,5 @@ class ConductorController {
         } catch (Exception $e) {
             $this->json(["error" => $e->getMessage()], 500);
         }
-    }
-
-    
-    
-    
+    }  
 }
-

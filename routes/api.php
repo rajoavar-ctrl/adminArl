@@ -90,6 +90,27 @@ try {
         executeController(new ContratistaController(), 'crear');
     }
 
+    if ($uri === '/contratistas/actualizar' && $method === 'POST') {
+        $data = json_decode(file_get_contents("php://input"), true);
+        if (!isset($data['id'])) {
+            errorResponse("ID no proporcionado", 400);
+        }
+        executeController(new ContratistaController(), 'actualizar', $data['id']);
+    }
+
+   // ===== CONTRATISTAS =====
+if ($uri === '/contratistas/eliminar' && $method === 'POST') {
+    $data = json_decode(file_get_contents("php://input"), true);
+    
+    // Debug: escribir en log
+    error_log("Eliminar contratista - ID recibido: " . ($data['id'] ?? 'null'));
+    
+    if (!isset($data['id'])) {
+        errorResponse("ID no proporcionado", 400);
+    }
+    executeController(new ContratistaController(), 'eliminar', $data['id']);
+}
+
     // ===== CONDUCTORES =====
     if ($uri === '/conductores' && $method === 'GET') {
         executeController(new ConductorController(), 'listar');
@@ -101,11 +122,21 @@ try {
 
     if ($uri === '/conductores/por-contratista' && $method === 'GET') {
         $id = $_GET['contratista_id'] ?? null;
+        if (!$id) {
+            errorResponse("contratista_id requerido", 400);
+        }
         executeController(new ConductorController(), 'porContratista', $id);
+    }
+
+    if ($uri === '/conductores/actualizar' && $method === 'POST') {
+        executeController(new ConductorController(), 'actualizar');
     }
 
     if ($uri === '/conductores/eliminar' && $method === 'POST') {
         $data = json_decode(file_get_contents("php://input"), true);
+        if (!isset($data['id'])) {
+            errorResponse("ID no proporcionado", 400);
+        }
         executeController(new ConductorController(), 'eliminar', $data['id']);
     }
 
@@ -116,6 +147,30 @@ try {
 
     if ($uri === '/vehiculos' && $method === 'POST') {
         executeController(new VehiculoController(), 'crear');
+    }
+
+    if ($uri === '/vehiculos/actualizar' && $method === 'POST') {
+        $data = json_decode(file_get_contents("php://input"), true);
+        if (!isset($data['id'])) {
+            errorResponse("ID no proporcionado", 400);
+        }
+        executeController(new VehiculoController(), 'actualizar', $data['id']);
+    }
+
+    if ($uri === '/vehiculos/eliminar' && $method === 'POST') {
+        $data = json_decode(file_get_contents("php://input"), true);
+        if (!isset($data['id'])) {
+            errorResponse("ID no proporcionado", 400);
+        }
+        executeController(new VehiculoController(), 'eliminar', $data['id']);
+    }
+
+    if ($uri === '/vehiculos/obtener' && $method === 'GET') {
+        $id = $_GET['id'] ?? null;
+        if (!$id) {
+            errorResponse("ID requerido", 400);
+        }
+        executeController(new VehiculoController(), 'obtener', $id);
     }
 
     // ===== 404 =====

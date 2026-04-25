@@ -10,68 +10,67 @@ class VehiculoController {
         exit;
     }
 
-    // CREAR
-    public function crear() {
-        ini_set('display_errors', 0);
+   // CREAR (VERIFICAR QUE GUARDE EL CONDUCTOR)
+public function crear() {
+    try {
+        $data = json_decode(file_get_contents("php://input"), true);
 
-        try {
-            $data = json_decode(file_get_contents("php://input"), true);
-
-            if (
-                empty($data['placa']) ||
-                empty($data['marca']) ||
-                empty($data['modelo']) ||
-                empty($data['contratista_id'])
-            ) {
-                $this->json(["error" => "Datos incompletos"], 400);
-            }
-
-            $db = new Database();
-            $conn = $db->connect();
-
-            $stmt = $conn->prepare("
-                INSERT INTO vehiculos (placa, marca, modelo, contratista_id, conductor_id)
-                VALUES (:placa, :marca, :modelo, :contratista_id, :conductor_id)
-            ");
-
-            $stmt->execute([
-                ":placa" => strtoupper($data['placa']),
-                ":marca" => $data['marca'],
-                ":modelo" => $data['modelo'],
-                ":contratista_id" => $data['contratista_id'],
-                ":conductor_id" => $data['conductor_id'] ?? null
-            ]);
-
-            $this->json(["mensaje" => "Vehículo creado correctamente"]);
-
-        } catch (Exception $e) {
-            $this->json(["error" => $e->getMessage()], 500);
+        if (empty($data['placa']) || empty($data['marca']) || empty($data['modelo']) || empty($data['contratista_id'])) {
+            $this->json(["error" => "Datos incompletos"], 400);
         }
+
+        $db = new Database();
+        $conn = $db->connect();
+
+        $stmt = $conn->prepare("
+            INSERT INTO vehiculos (placa, marca, modelo, contratista_id, conductor_id)
+            VALUES (:placa, :marca, :modelo, :contratista_id, :conductor_id)
+        ");
+
+        $stmt->execute([
+            ":placa" => strtoupper($data['placa']),
+            ":marca" => $data['marca'],
+            ":modelo" => $data['modelo'],
+            ":contratista_id" => $data['contratista_id'],
+            ":conductor_id" => isset($data['conductor_id']) && $data['conductor_id'] != '' ? $data['conductor_id'] : null
+        ]);
+
+        $this->json(["mensaje" => "Vehículo creado correctamente"]);
+
+    } catch (Exception $e) {
+        $this->json(["error" => $e->getMessage()], 500);
     }
+}
 
-    // LISTAR
-    public function listar() {
-        ini_set('display_errors', 0);
+  // LISTAR (CORREGIDO - INCLUYE NOMBRE DEL CONDUCTOR)
+public function listar() {
+    try {
+        $db = new Database();
+        $conn = $db->connect();
 
-        try {
-            $db = new Database();
-            $conn = $db->connect();
+        $stmt = $conn->query("
+            SELECT 
+                v.id, 
+                v.placa, 
+                v.marca, 
+                v.modelo, 
+                ct.nombre AS empresa,
+                c.nombre AS conductor_nombre,
+                v.conductor_id,
+                v.contratista_id
+            FROM vehiculos v
+            JOIN contratistas ct ON v.contratista_id = ct.id
+            LEFT JOIN conductores c ON v.conductor_id = c.id
+            ORDER BY v.id DESC
+        ");
 
-            $stmt = $conn->query("
-                SELECT v.id, v.placa, v.marca, v.modelo, ct.nombre AS empresa
-                FROM vehiculos v
-                JOIN contratistas ct ON v.contratista_id = ct.id
-                ORDER BY v.id DESC
-            ");
+        $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $this->json($data);
 
-            $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            $this->json($data);
-
-        } catch (Exception $e) {
-            $this->json(["error" => $e->getMessage()], 500);
-        }
+    } catch (Exception $e) {
+        $this->json(["error" => $e->getMessage()], 500);
     }
+}
 
     // OBTENER
     public function obtener($id) {

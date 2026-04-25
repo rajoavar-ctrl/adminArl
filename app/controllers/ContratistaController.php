@@ -16,8 +16,6 @@ class ContratistaController {
     // 📄 LISTAR
     // ========================
     public function listar() {
-        ini_set('display_errors', 0);
-
         try {
             $db = new Database();
             $conn = $db->connect();
@@ -29,7 +27,6 @@ class ContratistaController {
             ");
 
             $data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
             $this->json($data);
 
         } catch (Exception $e) {
@@ -45,11 +42,8 @@ class ContratistaController {
             $db = new Database();
             $conn = $db->connect();
 
-            $stmt = $conn->prepare("
-                SELECT * FROM contratistas WHERE id = ?
-            ");
+            $stmt = $conn->prepare("SELECT * FROM contratistas WHERE id = ?");
             $stmt->execute([$id]);
-
             $data = $stmt->fetch(PDO::FETCH_ASSOC);
 
             if (!$data) {
@@ -67,27 +61,27 @@ class ContratistaController {
     // ➕ CREAR
     // ========================
     public function crear() {
-        ini_set('display_errors', 0);
-
         try {
             $input = file_get_contents("php://input");
             $data = json_decode($input, true);
 
-            // 🔥 validar JSON
             if (!is_array($data)) {
                 $this->json(["error" => "JSON inválido"], 400);
             }
 
-            // 🔥 validar campos
-            if (
-                empty($data['nombre']) ||
-                empty($data['nit'])
-            ) {
+            if (empty($data['nombre']) || empty($data['nit'])) {
                 $this->json(["error" => "Datos incompletos"], 400);
             }
 
             $db = new Database();
             $conn = $db->connect();
+
+            // Verificar si ya existe el NIT
+            $checkStmt = $conn->prepare("SELECT id FROM contratistas WHERE nit = ?");
+            $checkStmt->execute([trim($data['nit'])]);
+            if ($checkStmt->fetch()) {
+                $this->json(["error" => "Ya existe un contratista con este NIT"], 400);
+            }
 
             $stmt = $conn->prepare("
                 INSERT INTO contratistas (nombre, nit)
@@ -100,7 +94,8 @@ class ContratistaController {
             ]);
 
             $this->json([
-                "mensaje" => "Contratista creado correctamente"
+                "mensaje" => "Contratista creado correctamente",
+                "id" => $conn->lastInsertId()
             ]);
 
         } catch (Exception $e) {
@@ -113,21 +108,26 @@ class ContratistaController {
     // ========================
     public function actualizar($id) {
         try {
-            $data = json_decode(file_get_contents("php://input"), true);
+            $input = file_get_contents("php://input");
+            $data = json_decode($input, true);
 
             if (!is_array($data)) {
                 $this->json(["error" => "JSON inválido"], 400);
             }
 
-            if (
-                empty($data['nombre']) ||
-                empty($data['nit'])
-            ) {
+            if (empty($data['nombre']) || empty($data['nit'])) {
                 $this->json(["error" => "Datos incompletos"], 400);
             }
 
             $db = new Database();
             $conn = $db->connect();
+
+            // Verificar si el contratista existe
+            $checkStmt = $conn->prepare("SELECT id FROM contratistas WHERE id = ?");
+            $checkStmt->execute([$id]);
+            if (!$checkStmt->fetch()) {
+                $this->json(["error" => "Contratista no encontrado"], 404);
+            }
 
             $stmt = $conn->prepare("
                 UPDATE contratistas 
@@ -141,7 +141,7 @@ class ContratistaController {
                 $id
             ]);
 
-            $this->json(["mensaje" => "Contratista actualizado"]);
+            $this->json(["mensaje" => "Contratista actualizado correctamente"]);
 
         } catch (Exception $e) {
             $this->json(["error" => $e->getMessage()], 500);
@@ -149,22 +149,68 @@ class ContratistaController {
     }
 
     // ========================
-    // ❌ ELIMINAR
+    // ❌ ELIMINAR CON CASCADA (CORREGIDO)
     // ========================
     public function eliminar($id) {
         try {
             $db = new Database();
             $conn = $db->connect();
+            
+            // Iniciar transacción
+            $conn->beginTransaction();
 
-            $stmt = $conn->prepare("
-                DELETE FROM contratistas WHERE id = ?
-            ");
+            // Verificar si el contratista existe
+            $checkStmt = $conn->prepare("SELECT id, nombre FROM contratistas WHERE id = ?");
+            $checkStmt->execute([$id]);
+            $contratista = $checkStmt->fetch(PDO::FETCH_ASSOC);
+            
+            if (!$contratista) {
+                $this->json(["error" => "Contratista no encontrado"], 404);
+            }
+
+            // CONTAR registros antes de eliminar (para feedback)
+            $countConductores = $conn->prepare("SELECT COUNT(*) FROM conductores WHERE contratista_id = ?");
+            $countConductores->execute([$id]);
+            $numConductores = $countConductores->fetchColumn();
+            
+            $countVehiculos = $conn->prepare("SELECT COUNT(*) FROM vehiculos WHERE contratista_id = ?");
+            $countVehiculos->execute([$id]);
+            $numVehiculos = $countVehiculos->fetchColumn();
+
+            // PASO 1: Actualizar vehículos (quitar relación con conductores)
+            $updateVehiculos = $conn->prepare("UPDATE vehiculos SET conductor_id = NULL WHERE contratista_id = ?");
+            $updateVehiculos->execute([$id]);
+            
+            // PASO 2: Eliminar vehículos del contratista
+            $deleteVehiculos = $conn->prepare("DELETE FROM vehiculos WHERE contratista_id = ?");
+            $deleteVehiculos->execute([$id]);
+            
+            // PASO 3: Eliminar conductores del contratista
+            $deleteConductores = $conn->prepare("DELETE FROM conductores WHERE contratista_id = ?");
+            $deleteConductores->execute([$id]);
+            
+            // PASO 4: Finalmente eliminar el contratista
+            $stmt = $conn->prepare("DELETE FROM contratistas WHERE id = ?");
             $stmt->execute([$id]);
+            
+            // Confirmar transacción
+            $conn->commit();
 
-            $this->json(["mensaje" => "Contratista eliminado"]);
+            $this->json([
+                "mensaje" => "Contratista '{$contratista['nombre']}' eliminado correctamente",
+                "detalles" => [
+                    "conductores_eliminados" => $numConductores,
+                    "vehiculos_eliminados" => $numVehiculos,
+                    "contratista_eliminado" => true
+                ]
+            ]);
 
         } catch (Exception $e) {
-            $this->json(["error" => $e->getMessage()], 500);
+            // Revertir transacción en caso de error
+            if (isset($conn)) {
+                $conn->rollBack();
+            }
+            $this->json(["error" => "Error al eliminar: " . $e->getMessage()], 500);
         }
     }
 }
