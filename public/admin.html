@@ -157,7 +157,7 @@ body {
 
 .card:hover {
     
-    box-shadow: 0 5px 15px rgba(202, 184, 184, 0.3);
+    box-shadow: 0 5px 15px rgba(245, 243, 243, 0.3);
 }
 
 .card.p-4 {
@@ -567,6 +567,201 @@ select.form-control option {
     color: gray;   
 }
 
+/* Corrección para tablas */
+.table {
+    width: 100%;
+    margin-bottom: 0;
+    border-collapse: collapse;
+}
+
+.table th, 
+.table td {
+    padding: 12px 15px;
+    vertical-align: middle;
+    border-bottom: 1px solid #1f2937;
+}
+
+.table th {
+    background: #1f2937;
+    color: #f97316;
+    font-weight: 600;
+}
+
+.table tbody tr:hover {
+    background: #1f2937;
+}
+
+/* Contenedor de acciones */
+.acciones-container {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+}
+
+.btn-sm {
+    padding: 5px 12px;
+    margin: 0;
+    font-size: 12px;
+    border-radius: 5px;
+}
+
+/* Paginación */
+.pagination {
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.page-link {
+    cursor: pointer;
+    padding: 8px 14px;
+    border-radius: 5px;
+    transition: all 0.2s;
+}
+
+.page-item.active .page-link {
+    background-color: #f97316 !important;
+    border-color: #f97316 !important;
+    color: #111827 !important;
+    font-weight: bold;
+}
+
+.page-link:hover {
+    background-color: #f97316 !important;
+    color: #111827 !important;
+    border-color: #f97316 !important;
+}
+
+/* ============================================ */
+/* AJUSTE GENERAL PARA MEJORAR VISUALIZACIÓN */
+/* ============================================ */
+
+/* Reducir padding general */
+body {
+    font-size: 13px;
+}
+
+/* Sidebar más compacto */
+.sidebar {
+    width: 220px;
+}
+
+.sidebar h4 {
+    padding: 15px;
+    font-size: 1.2rem;
+}
+
+.sidebar a {
+    padding: 10px 15px;
+    font-size: 13px;
+}
+
+/* Main ajustado */
+.main {
+    margin-left: 220px;
+    width: calc(100% - 220px);
+}
+
+/* Header más compacto */
+.header {
+    padding: 12px 20px;
+}
+
+.header h3 {
+    font-size: 1.2rem;
+}
+
+/* Content con menos padding */
+.content {
+    padding: 20px;
+}
+
+/* Cards con padding reducido */
+.card.p-4 {
+    padding: 1rem !important;
+}
+
+.card.p-3 {
+    padding: 0.8rem !important;
+}
+
+/* Títulos de cards más pequeños */
+.card h4 {
+    font-size: 1rem;
+    margin-bottom: 12px;
+}
+
+.card h6 {
+    font-size: 0.8rem;
+}
+
+/* Contadores más compactos */
+.card.p-3 h3 {
+    font-size: 1.5rem;
+}
+
+/* Inputs y selects más pequeños */
+.content select, 
+.content input {
+    padding: 6px 10px;
+    font-size: 12px;
+}
+
+/* Botones más compactos */
+.btn-sm {
+    padding: 4px 10px;
+    font-size: 11px;
+}
+
+.btn-primary {
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+/* Tablas más compactas */
+.table th, 
+.table td {
+    padding: 8px 10px;
+    font-size: 12px;
+}
+
+.table th {
+    font-size: 11px;
+}
+
+/* Filtros más compactos */
+.card.p-3 label {
+    font-size: 11px;
+    margin-bottom: 4px;
+}
+
+/* Paginación más pequeña */
+.pagination .page-link {
+    padding: 5px 10px;
+    font-size: 11px;
+}
+
+/* Footer más pequeño */
+.footer {
+    font-size: 10px;
+    padding: 8px !important;
+}
+
+/* Responsive para pantallas normales */
+@media (min-width: 992px) and (max-width: 1400px) {
+    .col-md-4 {
+        flex: 0 0 35%;
+        max-width: 35%;
+    }
+    
+    .col-md-8 {
+        flex: 0 0 65%;
+        max-width: 65%;
+    }
+}
 
 
 </style>
@@ -675,458 +870,384 @@ select.form-control option {
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-// TODAS TUS FUNCIONES JAVASCRIPT AQUÍ...
-
-
+// ============================================
+// VARIABLES GLOBALES
+// ============================================
 let idEditar = null;
+let paginaActual = {
+    contratistas: 1,
+    conductores: 1,
+    vehiculos: 1
+};
 
-function fetchJSON(url, options = {}) {
-    return fetch(url, options)
-    .then(async res => {
-        const text = await res.text();
-        try {
-            return JSON.parse(text);
-        } catch (e) {
-            console.error('❌ RESPUESTA INVALIDA:', text);
-            return [];
-        }
-    })
-    .catch(err => {
-        console.error('❌ ERROR FETCH:', err);
-        return [];
-    });
+// ============================================
+// NOTIFICACIONES
+// ============================================
+function mostrarExito(mensaje, titulo = "¡Éxito!") {
+    Swal.fire({ icon: 'success', title: titulo, text: mensaje, confirmButtonColor: '#f97316', background: '#111827', color: 'white', confirmButtonText: '👍 Entendido', timer: 3000, backdrop: 'rgba(0,0,0,0.5)' });
 }
 
+function mostrarError(mensaje, titulo = "¡Error!") {
+    Swal.fire({ icon: 'error', title: titulo, text: mensaje, confirmButtonColor: '#f97316', background: '#111827', color: 'white', confirmButtonText: '😓 Entendido' });
+}
+
+async function confirmarEliminacion(mensaje, titulo = "¿Estás seguro?") {
+    const result = await Swal.fire({ title: titulo, text: mensaje, icon: 'question', showCancelButton: true, confirmButtonColor: '#ef4444', cancelButtonColor: '#6c757d', confirmButtonText: '🗑 Sí, eliminar', cancelButtonText: '❌ Cancelar', background: '#111827', color: 'white', reverseButtons: true });
+    return result.isConfirmed;
+}
+
+function mostrarCargando(mensaje = "Procesando...") {
+    Swal.fire({ title: 'Cargando', text: mensaje, allowOutsideClick: false, allowEscapeKey: false, showConfirmButton: false, didOpen: () => { Swal.showLoading(); }, background: '#111827', color: 'white' });
+}
+
+function cerrarCargando() { Swal.close(); }
+
+function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, function(m) { if (m === '&') return '&amp;'; if (m === '<') return '&lt;'; if (m === '>') return '&gt;'; return m; }); }
+
+// ============================================
+// NAVEGACIÓN
+// ============================================
 function cargarVista(vista) {
     document.getElementById('titulo').innerText = vista.toUpperCase();
     fetch(`/orange-proyect/public/views/${vista}.html`)
-    .then(res => res.text())
-    .then(html => {
-        document.getElementById('contenido').innerHTML = html;
-        initVista(vista);
-    });
+        .then(res => res.text())
+        .then(html => {
+            document.getElementById('contenido').innerHTML = html;
+            setTimeout(() => initVista(vista), 50);
+        });
 }
 
 function initVista(vista) {
-    if (vista === 'contratistas') {
-        cargarContratistas();
+    if (vista === 'contratistas') { 
+        cargarContratistas(1); 
     }
-    if (vista === 'conductores') {
-        cargarContratistasSelect();
-        cargarConductores();
-        
-        // 👇 IMPORTANTE: Reconectar eventos del formulario después de cargar
-        setTimeout(() => {
-            const btnGuardar = document.querySelector('#contenido .btn-primary');
-            if (btnGuardar && btnGuardar.getAttribute('onclick') === 'crearConductor()') {
-                console.log("✅ Botón reconectado");
-                // Forzar que la función global esté disponible
-                btnGuardar.onclick = window.crearConductor;
-            }
-        }, 100);
+    if (vista === 'conductores') { 
+        cargarSelectEmpresas();
+        cargarConductores(1); 
     }
-    if (vista === 'vehiculos') {
-        cargarContratistasSelect();
-        cargarVehiculos();
+    if (vista === 'vehiculos') { 
+        cargarSelectEmpresas();
+        cargarSelectConductoresFiltro();
+        cargarVehiculos(1); 
         activarFiltroConductores();
     }
 }
 
-// ========================
-// CREAR CONDUCTOR (FUNCIÓN GLOBAL)
-// ========================
+// ============================================
+// CONTRATISTAS
+// ============================================
+window.cargarContratistas = function(page = 1) {
+    paginaActual.contratistas = page;
+    const search = document.getElementById('searchContratista')?.value || '';
+    const url = `/orange-proyect/public/contratistas?page=${page}&limit=5&search=${encodeURIComponent(search)}`;
+    
+    fetch(url)
+        .then(res => res.json())
+        .then(res => {
+            const tbody = document.querySelector('#tablaContratistas');
+            if (!tbody) return;
+            
+            if (!res.data || res.data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center">No hay contratistas registrados</td></tr>';
+                document.querySelector('#totalContratistas').textContent = '0';
+                document.getElementById('paginacion-contratistas').innerHTML = '';
+                return;
+            }
+            
+            tbody.innerHTML = '';
+            res.data.forEach(c => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${escapeHtml(c.nombre)}</strong></td>
+                        <td>${escapeHtml(c.nit)}</td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-warning" onclick='editarContratista(${JSON.stringify(c)})'>✏️ Editar</button>
+                            <button class="btn btn-sm btn-danger" onclick="eliminarContratista(${c.id})">🗑 Eliminar</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            document.querySelector('#totalContratistas').textContent = res.total;
+            actualizarPaginacion('contratistas', res.page, res.total_pages);
+        })
+        .catch(e => console.error('Error:', e));
+};
+
+window.aplicarFiltrosContratistas = function() { cargarContratistas(1); };
+
+window.crearContratista = function() {
+    const nombre = document.getElementById('nombre')?.value;
+    const nit = document.getElementById('nit')?.value;
+    if (!nombre || !nit) { mostrarError('Todos los campos son obligatorios'); return; }
+    
+    mostrarCargando('Creando contratista...');
+    fetch('/orange-proyect/public/contratistas', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ nombre, nit }) 
+    })
+    .then(res => res.json())
+    .then(data => { 
+        cerrarCargando(); 
+        if (data.error) mostrarError(data.error); 
+        else { 
+            mostrarExito('Contratista creado correctamente'); 
+            document.getElementById('nombre').value = ''; 
+            document.getElementById('nit').value = ''; 
+            cargarContratistas(1); 
+            cargarSelectEmpresas();
+        } 
+    })
+    .catch(e => { cerrarCargando(); mostrarError('Error de conexión'); });
+};
+
+window.editarContratista = function(contratista) { 
+    idEditar = contratista.id; 
+    document.getElementById('edit_nombre_contratista').value = contratista.nombre; 
+    document.getElementById('edit_nit_contratista').value = contratista.nit; 
+    new bootstrap.Modal(document.getElementById('modalEditarContratista')).show(); 
+};
+
+window.guardarEdicionContratista = function() {
+    const data = { 
+        id: idEditar, 
+        nombre: document.getElementById('edit_nombre_contratista').value, 
+        nit: document.getElementById('edit_nit_contratista').value 
+    };
+    if (!data.nombre || !data.nit) { mostrarError('Nombre y NIT son obligatorios'); return; }
+    
+    mostrarCargando('Actualizando...');
+    fetch('/orange-proyect/public/contratistas/actualizar', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(data) 
+    })
+    .then(res => res.json())
+    .then(res => { 
+        cerrarCargando(); 
+        if (res.error) mostrarError(res.error); 
+        else { 
+            mostrarExito('Contratista actualizado'); 
+            cargarContratistas(paginaActual.contratistas); 
+            bootstrap.Modal.getInstance(document.getElementById('modalEditarContratista')).hide(); 
+            cargarSelectEmpresas();
+        } 
+    })
+    .catch(e => { cerrarCargando(); mostrarError('Error al actualizar'); });
+};
+
+window.eliminarContratista = async function(id) {
+    if (!await confirmarEliminacion('¿Eliminar este contratista? Se eliminarán TODOS sus conductores y vehículos.', 'Eliminar Contratista')) return;
+    mostrarCargando('Eliminando...');
+    fetch('/orange-proyect/public/contratistas/eliminar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })
+        .then(res => res.json())
+        .then(data => { 
+            cerrarCargando(); 
+            if (data.error) mostrarError(data.error); 
+            else { 
+                mostrarExito(data.mensaje); 
+                cargarContratistas(1); 
+                cargarConductores(1); 
+                cargarVehiculos(1); 
+                cargarSelectEmpresas();
+            } 
+        })
+        .catch(e => { cerrarCargando(); mostrarError('Error al eliminar'); });
+};
+
+// ============================================
+// CONDUCTORES
+// ============================================
+window.cargarConductores = function(page = 1) {
+    paginaActual.conductores = page;
+    const search = document.getElementById('searchConductor')?.value || '';
+    const empresa_id = document.getElementById('empresaFiltro')?.value || '';
+    const url = `/orange-proyect/public/conductores?page=${page}&limit=5&search=${encodeURIComponent(search)}&empresa_id=${empresa_id}`;
+    
+    fetch(url)
+        .then(res => res.json())
+        .then(res => {
+            const tbody = document.querySelector('#tablaConductores');
+            if (!tbody) return;
+            
+            if (!res.data || res.data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center">No hay conductores registrados</td></tr>';
+                document.querySelector('#totalConductores').textContent = '0';
+                document.getElementById('paginacion-conductores').innerHTML = '';
+                return;
+            }
+            
+            tbody.innerHTML = '';
+            res.data.forEach(c => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${escapeHtml(c.nombre)}</strong></td>
+                        <td>${escapeHtml(c.cedula)}</td>
+                        <td>${escapeHtml(c.email || '')}</td>
+                        <td>${escapeHtml(c.empresa)}</td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-warning" onclick='editarConductor(${JSON.stringify(c)})'>✏️ Editar</button>
+                            <button class="btn btn-sm btn-danger" onclick="eliminarConductor(${c.id})">🗑 Eliminar</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            document.querySelector('#totalConductores').textContent = res.total;
+            actualizarPaginacion('conductores', res.page, res.total_pages);
+        })
+        .catch(e => console.error('Error:', e));
+};
+
+window.aplicarFiltrosConductores = function() { cargarConductores(1); };
+
 window.crearConductor = function() {
     const nombre = document.getElementById('nombre')?.value;
     const cedula = document.getElementById('cedula')?.value;
     const email = document.getElementById('email')?.value;
     const password = document.getElementById('password')?.value;
     const contratista_id = document.getElementById('contratista')?.value;
-
-    if (!nombre || !cedula || !email || !password || !contratista_id) {
-        mostrarError('Todos los campos son obligatorios');
-        return;
+    
+    if (!nombre || !cedula || !email || !password || !contratista_id) { 
+        mostrarError('Todos los campos son obligatorios'); 
+        return; 
     }
-
+    
     mostrarCargando('Creando conductor...');
-
-    fetch('/orange-proyect/public/conductores', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre, cedula, email, password, contratista_id: parseInt(contratista_id) })
+    fetch('/orange-proyect/public/conductores', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify({ nombre, cedula, email, password, contratista_id: parseInt(contratista_id) }) 
     })
     .then(res => res.json())
-    .then(data => {
-        cerrarCargando();
-        if (data.error) {
-            mostrarError(data.error);
-        } else {
-            mostrarExito('Conductor creado correctamente');
-            document.getElementById('nombre').value = '';
-            document.getElementById('cedula').value = '';
-            document.getElementById('email').value = '';
-            document.getElementById('password').value = '';
-            document.getElementById('contratista').value = '';
-            window.cargarConductores();
-        }
+    .then(data => { 
+        cerrarCargando(); 
+        if (data.error) mostrarError(data.error); 
+        else { 
+            mostrarExito('Conductor creado correctamente'); 
+            document.getElementById('nombre').value = ''; 
+            document.getElementById('cedula').value = ''; 
+            document.getElementById('email').value = ''; 
+            document.getElementById('password').value = ''; 
+            document.getElementById('contratista').value = ''; 
+            cargarConductores(1); 
+        } 
     })
-    .catch(error => {
-        cerrarCargando();
-        mostrarError('Error de conexión: ' + error);
-    });
+    .catch(e => { cerrarCargando(); mostrarError('Error de conexión'); });
 };
 
-window.cargarConductores = function() {
-    fetch('/orange-proyect/public/conductores')
-    .then(res => res.json())
-    .then(data => {
-        const tbody = document.querySelector('#tablaConductores');
-        if (!tbody) return;
-        
-        if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" class="text-center">No hay conductores registrados</td></tr>';
-            const totalSpan = document.querySelector('#totalConductores');
-            if (totalSpan) totalSpan.textContent = '0';
-            return;
-        }
-        
-        tbody.innerHTML = data.map(conductor => `
-            <tr>
-                <td><strong>${escapeHtml(conductor.nombre)}</strong></td>
-                <td>${escapeHtml(conductor.cedula)}</td>
-                <td>${escapeHtml(conductor.email || '')}</td>
-                <td>${escapeHtml(conductor.empresa)}</td>
-                <td class="text-center">
-                    <div class="acciones-container">
-                        <button class="btn btn-sm btn-warning" onclick='editarConductor(${JSON.stringify(conductor)})'>
-                            ✏️ Editar
-                        </button>
-                        <button class="btn btn-sm btn-danger" onclick="eliminarConductor(${conductor.id})">
-                            🗑 Eliminar
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `).join('');
-        
-        const totalSpan = document.querySelector('#totalConductores');
-        if (totalSpan) totalSpan.textContent = data.length;
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        const tbody = document.querySelector('#tablaConductores');
-        if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="text-center">Error al cargar datos</td></tr>';
-    });
-};
-
-
-// Función editarConductor actualizada
 window.editarConductor = function(conductor) {
     idEditar = conductor.id;
     document.getElementById('edit_nombre').value = conductor.nombre;
     document.getElementById('edit_cedula').value = conductor.cedula;
     document.getElementById('edit_email').value = conductor.email || '';
     
-    // Cargar contratistas en el select
-    fetch('/orange-proyect/public/contratistas')
-    .then(res => res.json())
-    .then(contratistas => {
-        const select = document.getElementById('edit_contratista_conductor');
-        if (select) {
-            select.innerHTML = contratistas.map(c => 
-                `<option value="${c.id}" ${c.id == conductor.contratista_id ? 'selected' : ''}>${escapeHtml(c.nombre)}</option>`
-            ).join('');
-        }
-    });
+    fetch('/orange-proyect/public/contratistas?limit=999')
+        .then(res => res.json())
+        .then(res => {
+            const data = res.data || res;
+            const select = document.getElementById('edit_contratista_conductor');
+            if (select) {
+                select.innerHTML = data.map(c => `<option value="${c.id}" ${c.id == conductor.contratista_id ? 'selected' : ''}>${escapeHtml(c.nombre)}</option>`).join('');
+            }
+        });
     
     new bootstrap.Modal(document.getElementById('modalEditar')).show();
 };
 
-// Función guardarEdicion actualizada
 window.guardarEdicion = function() {
-    const data = {
-        id: idEditar,
-        nombre: document.getElementById('edit_nombre').value,
-        cedula: document.getElementById('edit_cedula').value,
-        email: document.getElementById('edit_email').value,
-        contratista_id: document.getElementById('edit_contratista_conductor')?.value
+    const data = { 
+        id: idEditar, 
+        nombre: document.getElementById('edit_nombre').value, 
+        cedula: document.getElementById('edit_cedula').value, 
+        email: document.getElementById('edit_email').value, 
+        contratista_id: document.getElementById('edit_contratista_conductor')?.value 
     };
-
-    if (!data.nombre || !data.cedula) {
-        mostrarError('Nombre y cédula son obligatorios');
-        return;
-    }
-
-    mostrarCargando('Actualizando conductor...');
-
-    fetch('/orange-proyect/public/conductores/actualizar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+    if (!data.nombre || !data.cedula) { mostrarError('Nombre y cédula son obligatorios'); return; }
+    
+    mostrarCargando('Actualizando...');
+    fetch('/orange-proyect/public/conductores/actualizar', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(data) 
     })
     .then(res => res.json())
-    .then(res => {
-        cerrarCargando();
-        if (res.error) {
-            mostrarError(res.error);
-        } else {
-            mostrarExito('Conductor actualizado correctamente');
-            window.cargarConductores();
-            bootstrap.Modal.getInstance(document.getElementById('modalEditar')).hide();
-        }
+    .then(res => { 
+        cerrarCargando(); 
+        if (res.error) mostrarError(res.error); 
+        else { 
+            mostrarExito('Conductor actualizado'); 
+            cargarConductores(paginaActual.conductores); 
+            bootstrap.Modal.getInstance(document.getElementById('modalEditar')).hide(); 
+        } 
     })
-    .catch(error => {
-        cerrarCargando();
-        mostrarError('Error al actualizar');
-    });
+    .catch(e => { cerrarCargando(); mostrarError('Error al actualizar'); });
 };
 
 window.eliminarConductor = async function(id) {
-    const confirmado = await confirmarEliminacion(
-        '¿Realmente deseas eliminar este conductor?',
-        'Eliminar Conductor'
-    );
-    
-    if (!confirmado) return;
-
-    mostrarCargando('Eliminando conductor...');
-
-    fetch('/orange-proyect/public/conductores/eliminar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: id })
-    })
-    .then(res => res.json())
-    .then(data => {
-        cerrarCargando();
-        if (data.error) {
-            mostrarError(data.error);
-        } else {
-            mostrarExito('Conductor eliminado correctamente');
-            window.cargarConductores();
-        }
-    })
-    .catch(error => {
-        cerrarCargando();
-        mostrarError('Error al eliminar');
-    });
-};
-
-function escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>]/g, function(m) {
-        if (m === '&') return '&amp;';
-        if (m === '<') return '&lt;';
-        if (m === '>') return '&gt;';
-        return m;
-    });
-}
-
-window.cargarContratistasSelect = function() {
-    fetch('/orange-proyect/public/contratistas')
-    .then(res => res.json())
-    .then(data => {
-        // Para el formulario de conductores
-        const selectConductores = document.querySelector('#contenido #contratista');
-        if (selectConductores) {
-            selectConductores.innerHTML = '<option value="">Seleccione una empresa</option>' +
-                data.map(x => `<option value="${x.id}">${escapeHtml(x.nombre)}</option>`).join('');
-        }
-        
-        // Para el formulario de vehículos
-        const selectVehiculos = document.querySelector('#contenido #contratista_vehiculo');
-        if (selectVehiculos) {
-            selectVehiculos.innerHTML = '<option value="">Seleccione una empresa</option>' +
-                data.map(x => `<option value="${x.id}">${escapeHtml(x.nombre)}</option>`).join('');
-        }
-    })
-    .catch(error => {
-        console.error('Error cargando contratistas:', error);
-    });
-};
-
-window.cargarContratistas = function() {
-    fetch('/orange-proyect/public/contratistas')
-    .then(res => res.json())
-    .then(data => {
-        const tbody = document.querySelector('#tablaContratistas');
-        if (!tbody) return;
-        
-        if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="3" class="text-center">No hay contratistas registrados</td></tr>';
-            const totalSpan = document.querySelector('#totalContratistas');
-            if (totalSpan) totalSpan.textContent = '0';
-            return;
-        }
-        
-        tbody.innerHTML = data.map(contratista => `
-            <tr>
-                <td><strong>${escapeHtml(contratista.nombre)}</strong></td>
-                <td>${escapeHtml(contratista.nit)}</td>
-                <td class="text-center">
-                    <div class="acciones-container">
-                        <button class="btn btn-sm btn-warning" onclick='editarContratista(${JSON.stringify(contratista)})'>
-                            ✏️ Editar
-                        </button>
-                        <button class="btn btn-sm btn-danger" onclick="eliminarContratista(${contratista.id})">
-                            🗑 Eliminar
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `).join('');
-        
-        const totalSpan = document.querySelector('#totalContratistas');
-        if (totalSpan) totalSpan.textContent = data.length;
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        const tbody = document.querySelector('#tablaContratistas');
-        if (tbody) tbody.innerHTML = '<tr><td colspan="3" class="text-center">Error al cargar datos</td></tr>';
-    });
+    if (!await confirmarEliminacion('¿Eliminar este conductor?', 'Eliminar Conductor')) return;
+    mostrarCargando('Eliminando...');
+    fetch('/orange-proyect/public/conductores/eliminar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })
+        .then(res => res.json())
+        .then(data => { 
+            cerrarCargando(); 
+            if (data.error) mostrarError(data.error); 
+            else { 
+                mostrarExito('Conductor eliminado'); 
+                cargarConductores(1); 
+            } 
+        })
+        .catch(e => { cerrarCargando(); mostrarError('Error al eliminar'); });
 };
 
 // ============================================
-// FUNCIONES PARA CONTRATISTAS CON SWEETALERT
+// VEHÍCULOS
 // ============================================
-
-window.crearContratista = function() {
-    const nombre = document.getElementById('nombre')?.value;
-    const nit = document.getElementById('nit')?.value;
-
-    if (!nombre || !nit) {
-        mostrarError('Todos los campos son obligatorios');
-        return;
-    }
-
-    mostrarCargando('Creando contratista...');
-
-    fetch('/orange-proyect/public/contratistas', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre, nit })
-    })
-    .then(res => res.json())
-    .then(data => {
-        cerrarCargando();
-        if (data.error) {
-            mostrarError(data.error);
-        } else {
-            mostrarExito('Contratista creado correctamente');
-            document.getElementById('nombre').value = '';
-            document.getElementById('nit').value = '';
-            window.cargarContratistas();
-            // Recargar selects de otras vistas
-            if (typeof window.cargarContratistasSelect === 'function') {
-                window.cargarContratistasSelect();
-            }
-        }
-    })
-    .catch(error => {
-        cerrarCargando();
-        mostrarError('Error de conexión: ' + error);
-    });
-};
-
-window.editarContratista = function(contratista) {
-    idEditar = contratista.id;
-    document.getElementById('edit_nombre_contratista').value = contratista.nombre;
-    document.getElementById('edit_nit_contratista').value = contratista.nit;
-    new bootstrap.Modal(document.getElementById('modalEditarContratista')).show();
-};
-
-window.guardarEdicionContratista = function() {
-    const data = {
-        id: idEditar,
-        nombre: document.getElementById('edit_nombre_contratista').value,
-        nit: document.getElementById('edit_nit_contratista').value
-    };
-
-    if (!data.nombre || !data.nit) {
-        mostrarError('Nombre y NIT son obligatorios');
-        return;
-    }
-
-    mostrarCargando('Actualizando contratista...');
-
-    fetch('/orange-proyect/public/contratistas/actualizar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-    })
-    .then(res => res.json())
-    .then(res => {
-        cerrarCargando();
-        if (res.error) {
-            mostrarError(res.error);
-        } else {
-            mostrarExito('Contratista actualizado correctamente');
-            window.cargarContratistas();
-            bootstrap.Modal.getInstance(document.getElementById('modalEditarContratista')).hide();
-            // Recargar selects
-            if (typeof window.cargarContratistasSelect === 'function') {
-                window.cargarContratistasSelect();
-            }
-        }
-    })
-    .catch(error => {
-        cerrarCargando();
-        mostrarError('Error al actualizar: ' + error);
-    });
-};
-
-
-// ========================
-// ELIMINAR CONTRATISTA (CORREGIDO)
-// ========================
-window.eliminarContratista = async function(id) {
-    // Obtener nombre del contratista para mostrar en mensaje
-    let nombreContratista = '';
-    try {
-        const res = await fetch('/orange-proyect/public/contratistas');
-        const data = await res.json();
-        const contratista = data.find(c => c.id === id);
-        nombreContratista = contratista ? contratista.nombre : 'este contratista';
-    } catch(e) {}
+window.cargarVehiculos = function(page = 1) {
+    paginaActual.vehiculos = page;
+    const search = document.getElementById('searchVehiculo')?.value || '';
+    const empresa_id = document.getElementById('empresaFiltroVehiculo')?.value || '';
+    const conductor_id = document.getElementById('conductorFiltroVehiculo')?.value || '';
+    const url = `/orange-proyect/public/vehiculos?page=${page}&limit=5&search=${encodeURIComponent(search)}&empresa_id=${empresa_id}&conductor_id=${conductor_id}`;
     
-    const confirmado = await confirmarEliminacion(
-        `¿Realmente deseas eliminar "${nombreContratista}"?\n\n⚠️ Se eliminarán TODOS sus conductores y vehículos asociados.`,
-        'Eliminar Contratista'
-    );
-    
-    if (!confirmado) return;
-
-    mostrarCargando('Eliminando contratista y sus relaciones...');
-
-    fetch('/orange-proyect/public/contratistas/eliminar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: id })
-    })
-    .then(res => res.json())
-    .then(data => {
-        cerrarCargando();
-        if (data.error) {
-            mostrarError(data.error);
-        } else {
-            let mensaje = data.mensaje;
-            if (data.detalles) {
-                mensaje += `\n\n📊 Resumen:\n- Conductores eliminados: ${data.detalles.conductores_eliminados}\n- Vehículos eliminados: ${data.detalles.vehiculos_eliminados}`;
+    fetch(url)
+        .then(res => res.json())
+        .then(res => {
+            const tbody = document.querySelector('#tablaVehiculos');
+            if (!tbody) return;
+            
+            if (!res.data || res.data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">No hay vehículos registrados</td></tr>';
+                document.querySelector('#totalVehiculos').textContent = '0';
+                document.getElementById('paginacion-vehiculos').innerHTML = '';
+                return;
             }
-            mostrarExito(mensaje, '¡Eliminado!');
-            window.cargarContratistas();
-            window.cargarConductores();
-            window.cargarVehiculos();
-            // Recargar selects
-            if (typeof window.cargarContratistasSelect === 'function') {
-                window.cargarContratistasSelect();
-            }
-        }
-    })
-    .catch(error => {
-        cerrarCargando();
-        mostrarError('Error al eliminar: ' + error);
-    });
+            
+            tbody.innerHTML = '';
+            res.data.forEach(v => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${escapeHtml(v.placa)}</strong></td>
+                        <td>${escapeHtml(v.marca)}</td>
+                        <td>${escapeHtml(v.modelo)}</td>
+                        <td>${escapeHtml(v.empresa)}</td>
+                        <td>${escapeHtml(v.conductor_nombre || 'Sin asignar')}</td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-warning" onclick='editarVehiculo(${JSON.stringify(v)})'>✏️ Editar</button>
+                            <button class="btn btn-sm btn-danger" onclick="eliminarVehiculo(${v.id})">🗑 Eliminar</button>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            document.querySelector('#totalVehiculos').textContent = res.total;
+            actualizarPaginacion('vehiculos', res.page, res.total_pages);
+        })
+        .catch(e => console.error('Error:', e));
 };
+
+window.aplicarFiltrosVehiculos = function() { cargarVehiculos(1); };
 
 window.crearVehiculo = function() {
     const placa = document.getElementById('placa')?.value;
@@ -1134,129 +1255,39 @@ window.crearVehiculo = function() {
     const modelo = document.getElementById('modelo')?.value;
     const contratista_id = document.getElementById('contratista')?.value;
     const conductor_id = document.getElementById('conductor')?.value;
-
-    if (!placa || !marca || !modelo || !contratista_id) {
-        mostrarError('Placa, marca, modelo y empresa son obligatorios');
-        return;
+    
+    if (!placa || !marca || !modelo || !contratista_id) { 
+        mostrarError('Placa, marca, modelo y empresa son obligatorios'); 
+        return; 
     }
-
+    
     mostrarCargando('Registrando vehículo...');
-
-    fetch('/orange-proyect/public/vehiculos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+    fetch('/orange-proyect/public/vehiculos', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
         body: JSON.stringify({ 
             placa: placa.toUpperCase(), 
             marca, 
             modelo, 
             contratista_id: parseInt(contratista_id), 
             conductor_id: conductor_id || null 
-        })
+        }) 
     })
     .then(res => res.json())
-    .then(data => {
-        cerrarCargando();
-        if (data.error) {
-            mostrarError(data.error);
-        } else {
-            mostrarExito('Vehículo creado correctamente');
-            document.getElementById('placa').value = '';
-            document.getElementById('marca').value = '';
-            document.getElementById('modelo').value = '';
-            document.getElementById('contratista').value = '';
-            document.getElementById('conductor').innerHTML = '<option value="">Seleccione un conductor (opcional)</option>';
-            window.cargarVehiculos();
-        }
+    .then(data => { 
+        cerrarCargando(); 
+        if (data.error) mostrarError(data.error); 
+        else { 
+            mostrarExito('Vehículo creado correctamente'); 
+            document.getElementById('placa').value = ''; 
+            document.getElementById('marca').value = ''; 
+            document.getElementById('modelo').value = ''; 
+            document.getElementById('contratista').value = ''; 
+            document.getElementById('conductor').innerHTML = '<option value="">Seleccione un conductor (opcional)</option>'; 
+            cargarVehiculos(1); 
+        } 
     })
-    .catch(error => {
-        cerrarCargando();
-        mostrarError('Error de conexión: ' + error);
-    });
-};
-
-
-window.cargarVehiculos = function() {
-    fetch('/orange-proyect/public/vehiculos')
-    .then(res => res.json())
-    .then(data => {
-        const tbody = document.querySelector('#tablaVehiculos');
-        if (!tbody) return;
-        
-        if (data.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center">No hay vehículos registrados</td></tr>';
-            const totalSpan = document.querySelector('#totalVehiculos');
-            if (totalSpan) totalSpan.textContent = '0';
-            return;
-        }
-        
-        tbody.innerHTML = data.map(vehiculo => `
-            <tr>
-                <td><strong>${escapeHtml(vehiculo.placa)}</strong></td>
-                <td>${escapeHtml(vehiculo.marca)}</td>
-                <td>${escapeHtml(vehiculo.modelo)}</td>
-                <td>${escapeHtml(vehiculo.empresa)}</td>
-                <td>${escapeHtml(vehiculo.conductor_nombre || 'Sin asignar')}</td>
-                <td class="text-center">
-                    <div class="acciones-container">
-                        <button class="btn btn-sm btn-warning" onclick='editarVehiculo(${JSON.stringify(vehiculo)})'>
-                            ✏️ Editar
-                        </button>
-                        <button class="btn btn-sm btn-danger" onclick="eliminarVehiculo(${vehiculo.id})">
-                            🗑 Eliminar
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        `).join('');
-        
-        const totalSpan = document.querySelector('#totalVehiculos');
-        if (totalSpan) totalSpan.textContent = data.length;
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        const tbody = document.querySelector('#tablaVehiculos');
-        if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="text-center">Error al cargar datos</td></tr>';
-    });
-};
-
-window.eliminarVehiculo = async function(id) {
-    // Obtener placa del vehículo para mostrar en mensaje
-    let placaVehiculo = 'este vehículo';
-    try {
-        const res = await fetch('/orange-proyect/public/vehiculos');
-        const data = await res.json();
-        const vehiculo = data.find(v => v.id === id);
-        placaVehiculo = vehiculo ? vehiculo.placa : 'este vehículo';
-    } catch(e) {}
-    
-    const confirmado = await confirmarEliminacion(
-        `¿Realmente deseas eliminar el vehículo con placa "${placaVehiculo}"?`,
-        'Eliminar Vehículo'
-    );
-    
-    if (!confirmado) return;
-
-    mostrarCargando('Eliminando vehículo...');
-
-    fetch('/orange-proyect/public/vehiculos/eliminar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: id })
-    })
-    .then(res => res.json())
-    .then(data => {
-        cerrarCargando();
-        if (data.error) {
-            mostrarError(data.error);
-        } else {
-            mostrarExito('Vehículo eliminado correctamente');
-            window.cargarVehiculos();
-        }
-    })
-    .catch(error => {
-        cerrarCargando();
-        mostrarError('Error al eliminar: ' + error);
-    });
+    .catch(e => { cerrarCargando(); mostrarError('Error de conexión'); });
 };
 
 window.editarVehiculo = function(vehiculo) {
@@ -1265,194 +1296,178 @@ window.editarVehiculo = function(vehiculo) {
     document.getElementById('edit_marca').value = vehiculo.marca;
     document.getElementById('edit_modelo').value = vehiculo.modelo;
     
-    // Cargar contratistas
-    fetch('/orange-proyect/public/contratistas')
-    .then(res => res.json())
-    .then(contratistas => {
-        const selectContratista = document.getElementById('edit_contratista');
-        if (selectContratista) {
-            selectContratista.innerHTML = contratistas.map(c => 
-                `<option value="${c.id}" ${c.id == vehiculo.contratista_id ? 'selected' : ''}>${escapeHtml(c.nombre)}</option>`
-            ).join('');
-        }
-    });
+    fetch('/orange-proyect/public/contratistas?limit=999')
+        .then(res => res.json())
+        .then(res => {
+            const data = res.data || res;
+            const select = document.getElementById('edit_contratista');
+            if (select) {
+                select.innerHTML = data.map(c => `<option value="${c.id}" ${c.id == vehiculo.contratista_id ? 'selected' : ''}>${escapeHtml(c.nombre)}</option>`).join('');
+            }
+        });
     
-    // Cargar conductores del contratista
     fetch(`/orange-proyect/public/conductores/por-contratista?contratista_id=${vehiculo.contratista_id}`)
-    .then(res => res.json())
-    .then(conductores => {
-        const selectConductor = document.getElementById('edit_conductor');
-        if (selectConductor) {
-            selectConductor.innerHTML = '<option value="">Sin conductor</option>' +
-                conductores.map(c => 
-                    `<option value="${c.id}" ${c.id == vehiculo.conductor_id ? 'selected' : ''}>${escapeHtml(c.nombre)}</option>`
-                ).join('');
-        }
-    });
+        .then(res => res.json())
+        .then(conductores => {
+            const select = document.getElementById('edit_conductor');
+            if (select) {
+                select.innerHTML = '<option value="">Sin conductor</option>' + conductores.map(c => `<option value="${c.id}" ${c.id == vehiculo.conductor_id ? 'selected' : ''}>${escapeHtml(c.nombre)}</option>`).join('');
+            }
+        });
     
     new bootstrap.Modal(document.getElementById('modalEditarVehiculo')).show();
 };
 
 window.guardarEdicionVehiculo = function() {
-    const data = {
-        id: idEditar,
-        placa: document.getElementById('edit_placa').value.toUpperCase(),
-        marca: document.getElementById('edit_marca').value,
-        modelo: document.getElementById('edit_modelo').value,
-        contratista_id: document.getElementById('edit_contratista').value,
-        conductor_id: document.getElementById('edit_conductor').value || null
+    const data = { 
+        id: idEditar, 
+        placa: document.getElementById('edit_placa').value.toUpperCase(), 
+        marca: document.getElementById('edit_marca').value, 
+        modelo: document.getElementById('edit_modelo').value, 
+        contratista_id: document.getElementById('edit_contratista').value, 
+        conductor_id: document.getElementById('edit_conductor').value || null 
     };
-
-    if (!data.placa || !data.marca || !data.modelo || !data.contratista_id) {
-        mostrarError('Todos los campos son obligatorios');
-        return;
+    if (!data.placa || !data.marca || !data.modelo || !data.contratista_id) { 
+        mostrarError('Todos los campos son obligatorios'); 
+        return; 
     }
-
-    mostrarCargando('Actualizando vehículo...');
-
-    fetch('/orange-proyect/public/vehiculos/actualizar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+    
+    mostrarCargando('Actualizando...');
+    fetch('/orange-proyect/public/vehiculos/actualizar', { 
+        method: 'POST', 
+        headers: { 'Content-Type': 'application/json' }, 
+        body: JSON.stringify(data) 
     })
     .then(res => res.json())
-    .then(res => {
-        cerrarCargando();
-        if (res.error) {
-            mostrarError(res.error);
-        } else {
-            mostrarExito('Vehículo actualizado correctamente');
-            window.cargarVehiculos();
-            bootstrap.Modal.getInstance(document.getElementById('modalEditarVehiculo')).hide();
-        }
+    .then(res => { 
+        cerrarCargando(); 
+        if (res.error) mostrarError(res.error); 
+        else { 
+            mostrarExito('Vehículo actualizado'); 
+            cargarVehiculos(paginaActual.vehiculos); 
+            bootstrap.Modal.getInstance(document.getElementById('modalEditarVehiculo')).hide(); 
+        } 
     })
-    .catch(error => {
-        cerrarCargando();
-        mostrarError('Error al actualizar: ' + error);
-    });
+    .catch(e => { cerrarCargando(); mostrarError('Error al actualizar'); });
 };
 
-// Función para activar el filtro de conductores (cuando cambia el contratista)
+window.eliminarVehiculo = async function(id) {
+    if (!await confirmarEliminacion('¿Eliminar este vehículo?', 'Eliminar Vehículo')) return;
+    mostrarCargando('Eliminando...');
+    fetch('/orange-proyect/public/vehiculos/eliminar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })
+        .then(res => res.json())
+        .then(data => { 
+            cerrarCargando(); 
+            if (data.error) mostrarError(data.error); 
+            else { 
+                mostrarExito('Vehículo eliminado'); 
+                cargarVehiculos(1); 
+            } 
+        })
+        .catch(e => { cerrarCargando(); mostrarError('Error al eliminar'); });
+};
+
+// ============================================
+// SELECTS Y FILTROS
+// ============================================
+window.cargarSelectEmpresas = function() {
+    fetch('/orange-proyect/public/contratistas?limit=999')
+        .then(res => res.json())
+        .then(res => {
+            const data = res.data || res;
+            
+            const selectConductores = document.querySelector('#contratista');
+            if (selectConductores) {
+                selectConductores.innerHTML = '<option value="">Seleccione una empresa</option>' + data.map(x => `<option value="${x.id}">${escapeHtml(x.nombre)}</option>`).join('');
+            }
+            
+            const selectVehiculos = document.querySelector('#contratista_vehiculo');
+            if (selectVehiculos) {
+                selectVehiculos.innerHTML = '<option value="">Seleccione una empresa</option>' + data.map(x => `<option value="${x.id}">${escapeHtml(x.nombre)}</option>`).join('');
+            }
+            
+            const selectEmpresaFiltro = document.querySelector('#empresaFiltro');
+            if (selectEmpresaFiltro) {
+                selectEmpresaFiltro.innerHTML = '<option value="">Todas las empresas</option>' + data.map(x => `<option value="${x.id}">${escapeHtml(x.nombre)}</option>`).join('');
+            }
+            
+            const selectEmpresaVehiculo = document.querySelector('#empresaFiltroVehiculo');
+            if (selectEmpresaVehiculo) {
+                selectEmpresaVehiculo.innerHTML = '<option value="">Todas las empresas</option>' + data.map(x => `<option value="${x.id}">${escapeHtml(x.nombre)}</option>`).join('');
+            }
+        })
+        .catch(e => console.error(e));
+};
+
+window.cargarSelectConductoresFiltro = function() {
+    fetch('/orange-proyect/public/conductores?limit=999')
+        .then(res => res.json())
+        .then(res => {
+            const data = res.data || res;
+            const select = document.querySelector('#conductorFiltroVehiculo');
+            if (select) {
+                select.innerHTML = '<option value="">Todos los conductores</option>' + data.map(x => `<option value="${x.id}">${escapeHtml(x.nombre)}</option>`).join('');
+            }
+        })
+        .catch(e => console.error(e));
+};
+
 window.activarFiltroConductores = function() {
-    const selectContratista = document.querySelector('#contenido #contratista');
+    const selectContratista = document.querySelector('#contratista');
     if (!selectContratista) return;
     
     selectContratista.onchange = function() {
-        const selectConductor = document.querySelector('#contenido #conductor');
-        if (!this.value) {
-            if (selectConductor) {
-                selectConductor.innerHTML = '<option value="">Seleccione un conductor (opcional)</option>';
-            }
-            return;
+        const selectConductor = document.querySelector('#conductor');
+        if (!this.value) { 
+            if (selectConductor) selectConductor.innerHTML = '<option value="">Seleccione un conductor (opcional)</option>'; 
+            return; 
         }
         
         fetch(`/orange-proyect/public/conductores/por-contratista?contratista_id=${this.value}`)
-        .then(res => res.json())
-        .then(data => {
-            if (selectConductor) {
-                if (data.length === 0) {
-                    selectConductor.innerHTML = '<option value="">No hay conductores disponibles</option>';
-                } else {
-                    selectConductor.innerHTML = '<option value="">Seleccione un conductor (opcional)</option>' +
-                        data.map(x => `<option value="${x.id}">${escapeHtml(x.nombre)}</option>`).join('');
-                }
-            }
-        })
-        .catch(error => {
-            console.error('Error cargando conductores:', error);
-            if (selectConductor) {
-                selectConductor.innerHTML = '<option value="">Error al cargar conductores</option>';
-            }
-        });
+            .then(res => res.json())
+            .then(data => { 
+                if (selectConductor) { 
+                    if (data.length === 0) selectConductor.innerHTML = '<option value="">No hay conductores disponibles</option>'; 
+                    else selectConductor.innerHTML = '<option value="">Seleccione un conductor (opcional)</option>' + data.map(x => `<option value="${x.id}">${escapeHtml(x.nombre)}</option>`).join(''); 
+                } 
+            })
+            .catch(e => console.error(e));
     };
 };
 
 // ============================================
-// NOTIFICACIONES PROFESIONALES
+// PAGINACIÓN
 // ============================================
-
-// Éxito
-function mostrarExito(mensaje, titulo = "¡Éxito!") {
-    Swal.fire({
-        icon: 'success',
-        title: titulo,
-        text: mensaje,
-        confirmButtonColor: '#f97316',
-        background: '#111827',
-        color: 'white',
-        confirmButtonText: '👍 Entendido',
-        timer: 3000,
-        showConfirmButton: true,
-        backdrop: 'rgba(0,0,0,0.5)'
-    });
+function actualizarPaginacion(tabla, paginaActualNum, totalPaginas) {
+    const container = document.getElementById(`paginacion-${tabla}`);
+    if (!container) return;
+    if (totalPaginas <= 1) { container.innerHTML = ''; return; }
+    
+    let html = `<ul class="pagination pagination-sm justify-content-center">`;
+    
+    if (paginaActualNum > 1) {
+        html += `<li class="page-item"><button class="page-link bg-dark text-white border-secondary" onclick="cargar${tabla.charAt(0).toUpperCase() + tabla.slice(1)}(${paginaActualNum - 1})">« Anterior</button></li>`;
+    }
+    
+    for (let i = 1; i <= totalPaginas; i++) {
+        if (i === 1 || i === totalPaginas || (i >= paginaActualNum - 1 && i <= paginaActualNum + 1)) {
+            html += `<li class="page-item ${i === paginaActualNum ? 'active' : ''}"><button class="page-link ${i === paginaActualNum ? 'bg-warning text-dark border-warning' : 'bg-dark text-white border-secondary'}" onclick="cargar${tabla.charAt(0).toUpperCase() + tabla.slice(1)}(${i})">${i}</button></li>`;
+        } else if (i === paginaActualNum - 2 || i === paginaActualNum + 2) {
+            html += `<li class="page-item disabled"><span class="page-link bg-dark text-muted border-secondary">...</span></li>`;
+        }
+    }
+    
+    if (paginaActualNum < totalPaginas) {
+        html += `<li class="page-item"><button class="page-link bg-dark text-white border-secondary" onclick="cargar${tabla.charAt(0).toUpperCase() + tabla.slice(1)}(${paginaActualNum + 1})">Siguiente »</button></li>`;
+    }
+    
+    html += `</ul>`;
+    container.innerHTML = html;
 }
 
-// Error
-function mostrarError(mensaje, titulo = "¡Error!") {
-    Swal.fire({
-        icon: 'error',
-        title: titulo,
-        text: mensaje,
-        confirmButtonColor: '#f97316',
-        background: '#111827',
-        color: 'white',
-        confirmButtonText: '😓 Entendido'
-    });
-}
-
-// Advertencia
-function mostrarAdvertencia(mensaje, titulo = "¡Advertencia!") {
-    Swal.fire({
-        icon: 'warning',
-        title: titulo,
-        text: mensaje,
-        confirmButtonColor: '#f97316',
-        background: '#111827',
-        color: 'white',
-        confirmButtonText: '⚠️ Entendido'
-    });
-}
-
-// Confirmación para eliminar
-async function confirmarEliminacion(mensaje, titulo = "¿Estás seguro?") {
-    const result = await Swal.fire({
-        title: titulo,
-        text: mensaje,
-        icon: 'question',
-        showCancelButton: true,
-        confirmButtonColor: '#ef4444',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: '🗑 Sí, eliminar',
-        cancelButtonText: '❌ Cancelar',
-        background: '#111827',
-        color: 'white',
-        reverseButtons: true
-    });
-    return result.isConfirmed;
-}
-
-// Cargando
-function mostrarCargando(mensaje = "Procesando...") {
-    Swal.fire({
-        title: 'Cargando',
-        text: mensaje,
-        allowOutsideClick: false,
-        allowEscapeKey: false,
-        allowEnterKey: false,
-        showConfirmButton: false,
-        didOpen: () => {
-            Swal.showLoading();
-        },
-        background: '#111827',
-        color: 'white'
-    });
-}
-
-// Cerrar loading
-function cerrarCargando() {
-    Swal.close();
-}
-
+// ============================================
+// INICIO
+// ============================================
 cargarVista('contratistas');
 </script>
 </body>
