@@ -1,1 +1,22 @@
-Aplicativo con IA 
+Orange ARL
+
+Sistema web para gestión documental y validación de conductores, contratistas y vehículos.
+
+Tecnologías
+
+PHP
+MySQL
+HTML5
+CSS3
+JavaScript
+Composer
+
+Funcionalidades
+
+Gestión de contratistas.
+Gestión de conductores.
+Gestión de vehículos.
+Carga y administración documental.
+Validación automática vigencia de Seguridad Social.
+Integración con IA para análisis de información contenida en archivos PDF.
+Sistema de autenticación y control de acceso.
