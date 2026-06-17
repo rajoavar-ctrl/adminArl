@@ -90,28 +90,71 @@ class ConductorController {
     }
 
     public function crear() {
-        try {
-            $data = json_decode(file_get_contents("php://input"), true);
-            if (!is_array($data)) $this->json(["error" => "JSON inválido"], 400);
-            if (empty($data['nombre']) || empty($data['cedula']) || empty($data['email']) || empty($data['password']) || empty($data['contratista_id'])) {
-                $this->json(["error" => "Datos incompletos"], 400);
-            }
+    try {
+        $data = json_decode(file_get_contents("php://input"), true);
 
-            $db = new Database();
-            $conn = $db->connect();
-
-            $checkStmt = $conn->prepare("SELECT id FROM conductores WHERE cedula = ?");
-            $checkStmt->execute([trim($data['cedula'])]);
-            if ($checkStmt->fetch()) $this->json(["error" => "Ya existe un conductor con esta cédula"], 400);
-
-            $stmt = $conn->prepare("INSERT INTO conductores (nombre, cedula, email, password, contratista_id) VALUES (?, ?, ?, ?, ?)");
-            $stmt->execute([trim($data['nombre']), trim($data['cedula']), trim($data['email']), password_hash($data['password'], PASSWORD_DEFAULT), $data['contratista_id']]);
-            $this->json(["mensaje" => "Conductor creado correctamente", "id" => $conn->lastInsertId()]);
-        } catch (Exception $e) {
-            $this->json(["error" => $e->getMessage()], 500);
+        if (empty($data['nombre']) || empty($data['cedula']) || empty($data['email']) || 
+            empty($data['password']) || empty($data['contratista_id'])) {
+            $this->json(["error" => "Datos incompletos"], 400);
         }
-    }
 
+        $db = new Database();
+        $conn = $db->connect();
+
+        // Verificar si ya existe la cédula
+        $checkStmt = $conn->prepare("SELECT id FROM conductores WHERE cedula = ?");
+        $checkStmt->execute([trim($data['cedula'])]);
+        if ($checkStmt->fetch()) {
+            $this->json(["error" => "Ya existe un conductor con esta cédula"], 400);
+        }
+
+        $stmt = $conn->prepare("
+            INSERT INTO conductores 
+            (nombre, cedula, email, telefono, password, contratista_id)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ");
+
+        $stmt->execute([
+            trim($data['nombre']),
+            trim($data['cedula']),
+            trim($data['email']),
+            $data['telefono'] ?? null,  // 👈 Agregar teléfono
+            password_hash($data['password'], PASSWORD_DEFAULT),
+            $data['contratista_id']
+        ]);
+
+        $this->json(["mensaje" => "Conductor creado correctamente", "id" => $conn->lastInsertId()]);
+
+    } catch (Exception $e) {
+        $this->json(["error" => $e->getMessage()], 500);
+    }
+}
+
+
+
+
+
+    // En ConductorController.php
+// ========================
+// MIS CONDUCTORES (SOLO LOS DEL CONTRATISTA LOGUEADO)
+// ========================
+public function misConductores() {
+    if (!isset($_SESSION['contratista_id'])) {
+        $this->json(["error" => "No autorizado"], 401);
+    }
+    
+    try {
+        $db = new Database();
+        $conn = $db->connect();
+        
+        $stmt = $conn->prepare("SELECT id, nombre, cedula, email, telefono FROM conductores WHERE contratista_id = ?");
+        $stmt->execute([$_SESSION['contratista_id']]);
+        $this->json($stmt->fetchAll(PDO::FETCH_ASSOC));
+        
+    } catch (Exception $e) {
+        $this->json(["error" => $e->getMessage()], 500);
+    }
+}
     public function actualizar() {
         try {
             $data = json_decode(file_get_contents("php://input"), true);

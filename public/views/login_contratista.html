@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Contratista - Orange Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .login-container { width: 100%; max-width: 450px; padding: 20px; }
+        .login-card {
+            background: #111827;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            border: 1px solid #1f2937;
+        }
+        .login-header { text-align: center; margin-bottom: 30px; }
+        .login-header h1 { color: #f97316; font-size: 2rem; font-weight: 700; }
+        .login-header p { color: #9ca3af; }
+        .form-group { margin-bottom: 20px; }
+        .form-group label { color: #9ca3af; margin-bottom: 8px; display: block; font-size: 0.85rem; }
+        .form-control {
+            background: #1f2937;
+            border: 1px solid #374151;
+            color: white;
+            border-radius: 10px;
+            padding: 12px 15px;
+            width: 100%;
+        }
+        .form-control:focus {
+            outline: none;
+            border-color: #f97316;
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
+        }
+        .btn-login {
+            background: #f97316;
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-login:hover { background: #ea580c; transform: translateY(-2px); }
+        .register-link { text-align: center; margin-top: 20px; color: #9ca3af; }
+        .register-link a { color: #f97316; text-decoration: none; }
+        .register-link a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <span style="font-size: 3rem;">🚛</span>
+                <h1>Orange Admin</h1>
+                <p>Acceso para Contratistas</p>
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>📧 Correo Electrónico</label>
+                    <input type="email" id="email" class="form-control" placeholder="tu@empresa.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label>🔒 Contraseña</label>
+                    <input type="password" id="password" class="form-control" placeholder="••••••" required>
+                </div>
+
+                <button type="submit" class="btn-login">Ingresar</button>
+            </form>
+
+            <div class="register-link">
+                ¿No tienes cuenta? <a href="/orange-proyect/public/views/registro_contratista.html">Regístrate aquí</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            Swal.fire({
+                title: 'Iniciando sesión...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            try {
+                const response = await fetch('/orange-proyect/public/contratistas/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.error,
+                        background: '#111827',
+                        color: 'white',
+                        confirmButtonColor: '#f97316'
+                    });
+                } else if (data.estado === 'pendiente') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Cuenta pendiente',
+                        text: 'Tu cuenta está en espera de aprobación por el administrador.',
+                        background: '#111827',
+                        color: 'white',
+                        confirmButtonColor: '#f97316'
+                    });
+                } else if (data.estado === 'rechazado') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Cuenta rechazada',
+                        text: 'Tu solicitud fue rechazada. Contacta al administrador.',
+                        background: '#111827',
+                        color: 'white',
+                        confirmButtonColor: '#f97316'
+                    });
+                } else if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Bienvenido!',
+                        text: data.mensaje,
+                        background: '#111827',
+                        color: 'white',
+                        confirmButtonColor: '#f97316',
+                        timer: 1500
+                    }).then(() => {
+                        window.location.href = '/orange-proyect/public/views/contratista_dashboard.html';
+                    });
+                }
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error de conexión',
+                    background: '#111827',
+                    color: 'white',
+                    confirmButtonColor: '#f97316'
+                });
+            }
+        });
+    </script>
+</body>
+</html>

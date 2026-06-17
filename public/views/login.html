@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Orange Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 450px;
+            padding: 20px;
+        }
+
+        .login-card {
+            background: #111827;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            border: 1px solid #1f2937;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h1 {
+            color: #f97316;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .login-header p {
+            color: #9ca3af;
+            font-size: 0.9rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            color: #9ca3af;
+            margin-bottom: 8px;
+            display: block;
+            font-size: 0.85rem;
+        }
+
+        .form-control {
+            background: #1f2937;
+            border: 1px solid #374151;
+            color: white;
+            border-radius: 10px;
+            padding: 12px 15px;
+            width: 100%;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #f97316;
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.2);
+        }
+
+        .btn-login {
+            background: #f97316;
+            color: white;
+            border: none;
+            padding: 12px;
+            width: 100%;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .btn-login:hover {
+            background: #ea580c;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+        }
+
+        .register-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #9ca3af;
+        }
+
+        .register-link a {
+            color: #f97316;
+            text-decoration: none;
+        }
+
+        .register-link a:hover {
+            text-decoration: underline;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .logo span {
+            font-size: 3rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="logo">
+                <span>🚛</span>
+            </div>
+            <div class="login-header">
+                <h1>Orange Admin</h1>
+                <p>Sistema de Gestión de Transporte</p>
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>📧 Correo Electrónico</label>
+                    <input type="email" id="email" class="form-control" placeholder="admin@sistema.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label>🔒 Contraseña</label>
+                    <input type="password" id="password" class="form-control" placeholder="••••••" required>
+                </div>
+
+                <button type="submit" class="btn-login">Ingresar al Sistema</button>
+            </form>
+
+            <div class="register-link">
+                ¿No tienes cuenta? <a href="#" onclick="mostrarRegistro()">Regístrate aquí</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Registro -->
+    <div class="modal fade" id="modalRegistro" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-white">
+                <div class="modal-header">
+                    <h5 class="modal-title">📝 Registrar Usuario</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="text" id="reg_nombre" class="form-control mb-2" placeholder="Nombre completo">
+                    <input type="email" id="reg_email" class="form-control mb-2" placeholder="Correo electrónico">
+                    <input type="password" id="reg_password" class="form-control mb-2" placeholder="Contraseña">
+                    <input type="password" id="reg_confirm_password" class="form-control mb-2" placeholder="Confirmar contraseña">
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button class="btn btn-primary" onclick="registrarUsuario()">Registrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        // Login
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            Swal.fire({
+                title: 'Iniciando sesión...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            try {
+                const response = await fetch('/orange-proyect/public/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.error,
+                        background: '#111827',
+                        color: 'white',
+                        confirmButtonColor: '#f97316'
+                    });
+                } else if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Bienvenido!',
+                        text: data.mensaje,
+                        background: '#111827',
+                        color: 'white',
+                        confirmButtonColor: '#f97316',
+                        timer: 1500
+                    }).then(() => {
+                        window.location.href = '/orange-proyect/public/admin.html';
+                    });
+                }
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error de conexión',
+                    background: '#111827',
+                    color: 'white',
+                    confirmButtonColor: '#f97316'
+                });
+            }
+        });
+
+        // Mostrar modal de registro
+        function mostrarRegistro() {
+            new bootstrap.Modal(document.getElementById('modalRegistro')).show();
+        }
+
+        // Registrar usuario
+        async function registrarUsuario() {
+            const nombre = document.getElementById('reg_nombre').value;
+            const email = document.getElementById('reg_email').value;
+            const password = document.getElementById('reg_password').value;
+            const confirmPassword = document.getElementById('reg_confirm_password').value;
+
+            if (!nombre || !email || !password) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Campos incompletos',
+                    text: 'Todos los campos son obligatorios',
+                    background: '#111827',
+                    color: 'white',
+                    confirmButtonColor: '#f97316'
+                });
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Contraseñas no coinciden',
+                    text: 'Las contraseñas deben ser iguales',
+                    background: '#111827',
+                    color: 'white',
+                    confirmButtonColor: '#f97316'
+                });
+                return;
+            }
+
+            if (password.length < 6) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Contraseña muy corta',
+                    text: 'La contraseña debe tener al menos 6 caracteres',
+                    background: '#111827',
+                    color: 'white',
+                    confirmButtonColor: '#f97316'
+                });
+                return;
+            }
+
+            Swal.fire({
+                title: 'Registrando...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            try {
+                const response = await fetch('/orange-proyect/public/auth/registrar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nombre, email, password })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.error,
+                        background: '#111827',
+                        color: 'white',
+                        confirmButtonColor: '#f97316'
+                    });
+                } else if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Registro exitoso!',
+                        text: data.mensaje,
+                        background: '#111827',
+                        color: 'white',
+                        confirmButtonColor: '#f97316'
+                    }).then(() => {
+                        bootstrap.Modal.getInstance(document.getElementById('modalRegistro')).hide();
+                        document.getElementById('reg_nombre').value = '';
+                        document.getElementById('reg_email').value = '';
+                        document.getElementById('reg_password').value = '';
+                        document.getElementById('reg_confirm_password').value = '';
+                    });
+                }
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error de conexión',
+                    background: '#111827',
+                    color: 'white',
+                    confirmButtonColor: '#f97316'
+                });
+            }
+        }
+
+        // Presionar Enter para enviar
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+            }
+        });
+    </script>
+</body>
+</html>

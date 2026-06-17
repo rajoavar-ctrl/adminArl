@@ -1,5 +1,10 @@
 <?php
 
+// Iniciar sesión SOLO UNA VEZ al principio
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');
 
@@ -9,6 +14,7 @@ require_once __DIR__ . '/../app/controllers/AdminController.php';
 require_once __DIR__ . '/../app/controllers/ContratistaController.php';
 require_once __DIR__ . '/../app/controllers/ConductorController.php';
 require_once __DIR__ . '/../app/controllers/VehiculoController.php';
+require_once __DIR__ . '/../app/controllers/DashboardController.php';
 
 // ========================
 // NORMALIZAR URI
@@ -172,6 +178,94 @@ if ($uri === '/contratistas/eliminar' && $method === 'POST') {
         }
         executeController(new VehiculoController(), 'obtener', $id);
     }
+
+    if ($uri === '/conductores/obtener' && $method === 'GET') {
+    $id = $_GET['id'] ?? null;
+    executeController(new ConductorController(), 'obtener', $id);
+}
+
+    // ===== AUTENTICACIÓN =====
+if ($uri === '/auth/login' && $method === 'POST') {
+    executeController(new AuthController(), 'login');
+}
+
+if ($uri === '/auth/verificar' && $method === 'GET') {
+    executeController(new AuthController(), 'verificarSesion');
+}
+
+if ($uri === '/auth/logout' && $method === 'POST') {
+    executeController(new AuthController(), 'logout');
+}
+
+if ($uri === '/auth/registrar' && $method === 'POST') {
+    executeController(new AuthController(), 'registrar');
+}
+
+// ===== CONTRATISTAS - PERFIL Y VERIFICACIÓN =====
+if ($uri === '/contratistas/verificar' && $method === 'GET') {
+    executeController(new ContratistaController(), 'verificarSesionContratista');
+}
+
+if ($uri === '/contratistas/logout' && $method === 'POST') {
+    executeController(new ContratistaController(), 'logoutContratista');
+}
+
+if ($uri === '/contratistas/mi-perfil' && $method === 'GET') {
+    executeController(new ContratistaController(), 'miPerfil');
+}
+
+// ===== CONTRATISTAS - REGISTRO Y LOGIN =====
+if ($uri === '/contratistas/registro' && $method === 'POST') {
+    executeController(new ContratistaController(), 'registro');
+}
+
+if ($uri === '/contratistas/login' && $method === 'POST') {
+    executeController(new ContratistaController(), 'loginContratista');
+}
+
+// ===== CONTRATISTAS - PERFIL Y VERIFICACIÓN =====
+if ($uri === '/contratistas/verificar' && $method === 'GET') {
+    executeController(new ContratistaController(), 'verificarSesionContratista');
+}
+
+if ($uri === '/contratistas/logout' && $method === 'POST') {
+    executeController(new ContratistaController(), 'logoutContratista');
+}
+
+if ($uri === '/contratistas/mi-perfil' && $method === 'GET') {
+    executeController(new ContratistaController(), 'miPerfil');
+}
+
+// ===== CONDUCTORES - FILTRADOS POR CONTRATISTA =====
+if ($uri === '/conductores/mis-conductores' && $method === 'GET') {
+    executeController(new ConductorController(), 'misConductores');
+}
+
+// ===== VEHÍCULOS - FILTRADOS POR CONTRATISTA =====
+if ($uri === '/vehiculos/mis-vehiculos' && $method === 'GET') {
+    executeController(new VehiculoController(), 'misVehiculos');
+}
+
+if ($uri === '/contratistas/pendientes' && $method === 'GET') {
+    executeController(new ContratistaController(), 'listarPendientes');
+}
+
+if ($uri === '/contratistas/aprobar' && $method === 'POST') {
+    $data = json_decode(file_get_contents("php://input"), true);
+    executeController(new ContratistaController(), 'aprobar', $data['id']);
+}
+
+if ($uri === '/contratistas/rechazar' && $method === 'POST') {
+    $data = json_decode(file_get_contents("php://input"), true);
+    executeController(new ContratistaController(), 'rechazar', $data['id']);
+}
+
+if ($uri === '/dashboard' && $method === 'GET') {
+    $controller = new DashboardController();
+    $controller->resumen();
+    exit;
+}
+
 
     // ===== 404 =====
     errorResponse("Ruta no encontrada: $uri", 404);
